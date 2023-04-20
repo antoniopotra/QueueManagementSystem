@@ -54,8 +54,8 @@ public class SimulationManager implements Runnable {
             Iterator<Task> i = generatedTasks.iterator();
             while (i.hasNext()) {
                 Task task = i.next();
-                if (task.getArrivalTime() != currentTime) continue;
-                simulation.updateLog(String.format("T%d -> Q%d\n", task.getId(), scheduler.dispatchTask(task)));
+                if (task.arrivalTime() != currentTime) continue;
+                simulation.updateLog(String.format("T%d -> Q%d\n", task.id(), scheduler.dispatchTask(task)));
                 i.remove();
             }
 
@@ -94,7 +94,7 @@ public class SimulationManager implements Runnable {
 
             simulation.updateLog(String.format("Task %d: %s\n", i + 1, task));
         }
-        generatedTasks.sort(Comparator.comparing(Task::getArrivalTime));
+        generatedTasks.sort(Comparator.comparing(Task::arrivalTime));
     }
 
     private FileWriter generateExecutionLog() {
@@ -170,6 +170,17 @@ public class SimulationManager implements Runnable {
 
             if (noClients < 0 || noServers < 0 || timeLimit < 0 || minArrivalTime < 0 || maxArrivalTime < 0 || minServiceTime < 0 || maxServiceTime < 0) {
                 throw new NumberFormatException();
+            }
+
+            if (minArrivalTime > maxArrivalTime) {
+                int aux = minArrivalTime;
+                minArrivalTime = maxArrivalTime;
+                maxArrivalTime = aux;
+            }
+            if (minServiceTime > maxServiceTime) {
+                int aux = minServiceTime;
+                minServiceTime = maxServiceTime;
+                maxServiceTime = aux;
             }
         }
     }

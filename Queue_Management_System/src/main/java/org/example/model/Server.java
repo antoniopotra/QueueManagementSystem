@@ -22,7 +22,7 @@ public class Server implements Runnable {
 
     public void addTask(Task newTask) {
         tasks.add(newTask);
-        waitingPeriod.addAndGet(newTask.getServiceTime());
+        waitingPeriod.addAndGet(newTask.serviceTime());
     }
 
     @Override
@@ -32,14 +32,14 @@ public class Server implements Runnable {
 
             Task first = tasks.peek();
             try {
-                Thread.sleep(first.getServiceTime() * Constants.TIME_UNIT);
+                Thread.sleep(first.serviceTime() * Constants.TIME_UNIT);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            waitingPeriod.addAndGet(-first.getServiceTime());
+            waitingPeriod.addAndGet(-first.serviceTime());
             tasks.remove();
 
-            simulation.updateLog(String.format("T%d leaving Q%d\n", first.getId(), id));
+            simulation.updateLog(String.format("T%d leaving Q%d\n", first.id(), id));
         }
     }
 
