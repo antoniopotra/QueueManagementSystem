@@ -38,28 +38,38 @@ public class SimulationManager implements Runnable {
 
     public void init() {
         while (!canStart) Thread.onSpinWait();
-        scheduler = new Scheduler(noServers, noClients, simulation);
+        scheduler = new Scheduler(noServers, noClients);
         scheduler.changeStrategy(SelectionPolicy.SHORTEST_TIME);
     }
 
     @Override
     public void run() {
-        simulation.updateLog("\nLog of events:\n");
         FileWriter output = generateExecutionLog();
 
+        float averageServiceTime = 0;
+        for (Task task : generatedTasks) {
+            averageServiceTime += task.serviceTime();
+        }
+        averageServiceTime /= (float) generatedTasks.size();
+
+        int peakHour = -1, maxCount = -1;
+        float averageWaitingTime = 0;
         int currentTime = 0;
         while (currentTime < timeLimit) {
             updateExecutionLog(output, currentTime);
+            updateGui(currentTime);
 
-            Iterator<Task> i = generatedTasks.iterator();
-            while (i.hasNext()) {
-                Task task = i.next();
-                if (task.arrivalTime() != currentTime) continue;
-                simulation.updateLog(String.format("T%d -> Q%d\n", task.id(), scheduler.dispatchTask(task)));
-                i.remove();
-            }
-
+            averageWaitingTime += dispatchTasks(currentTime);
             currentTime++;
+
+            int count = 0;
+            for (Server server : scheduler.getServers()) {
+                count += server.size();
+            }
+            if (count > maxCount) {
+                maxCount = count;
+                peakHour = currentTime;
+            }
 
             try {
                 Thread.sleep(Constants.TIME_UNIT);
@@ -68,11 +78,9 @@ public class SimulationManager implements Runnable {
             }
         }
 
-        for (Server server : scheduler.getServers()) {
-            server.close();
-        }
-
-        simulation.finish();
+        closeServers();
+        averageWaitingTime /= (float) noClients;
+        simulationResults(peakHour, averageServiceTime, averageWaitingTime);
 
         try {
             output.close();
@@ -81,18 +89,37 @@ public class SimulationManager implements Runnable {
         }
     }
 
+    private void simulationResults(int peakHour, float averageServiceTime, float averageWaitingTime) {
+        simulation.finish();
+        simulation.showInfoPopup("Peak Hour: " + peakHour + "\nAverage Service Time: " + averageServiceTime + "\nAverage Waiting Time: " + averageWaitingTime);
+    }
+
+    private void closeServers() {
+        for (Server server : scheduler.getServers()) {
+            server.close();
+        }
+    }
+
+    private int dispatchTasks(int currentTime) {
+        Iterator<Task> i = generatedTasks.iterator();
+        int waitingTime = 0;
+        while (i.hasNext()) {
+            Task task = i.next();
+            if (task.arrivalTime() != currentTime + 1) continue;
+
+            waitingTime += scheduler.dispatchTask(task);
+            i.remove();
+        }
+        return waitingTime;
+    }
 
     private void generateRandomTasks() {
-        simulation.updateLog("Generating tasks:\n");
         for (int i = 0; i < noClients; i++) {
             int id = i + 1;
             int arrivalTime = (int) Math.floor(Math.random() * (maxArrivalTime - minArrivalTime + 1) + minArrivalTime);
             int serviceTime = (int) Math.floor(Math.random() * (maxServiceTime - minServiceTime + 1) + minServiceTime);
 
-            Task task = new Task(id, arrivalTime, serviceTime);
-            generatedTasks.add(task);
-
-            simulation.updateLog(String.format("Task %d: %s\n", i + 1, task));
+            generatedTasks.add(new Task(id, arrivalTime, serviceTime));
         }
         generatedTasks.sort(Comparator.comparing(Task::arrivalTime));
     }
@@ -140,6 +167,28 @@ public class SimulationManager implements Runnable {
         } catch (IOException ignored) {
 
         }
+    }
+
+    private void updateGui(int currentTime) {
+        StringBuilder update = new StringBuilder("Time " + currentTime + "\nWaiting clients: ");
+        for (Task task : generatedTasks) {
+            update.append(task.toString());
+            update.append("; ");
+        }
+        update.append("\n");
+        for (Server server : scheduler.getServers()) {
+            update.append(String.format("Queue %d: ", server.getId()));
+            if (server.getTasks().isEmpty()) {
+                update.append("closed\n");
+                continue;
+            }
+            for (Task task : server.getTasks()) {
+                update.append(task.toString());
+                update.append("; ");
+            }
+            update.append("\n");
+        }
+        simulation.updateLog(String.valueOf(update));
     }
 
     private class SimulationListener implements ActionListener {

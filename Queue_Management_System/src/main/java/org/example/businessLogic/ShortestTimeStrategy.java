@@ -9,17 +9,15 @@ public class ShortestTimeStrategy implements Strategy {
     @Override
     public int addTask(List<Server> servers, Task task) {
         Server fastest = servers.get(0);
-        int index = 0;
 
-        for (int i = 0; i < servers.size(); i++) {
-            Server server = servers.get(i);
+        for (Server server : servers) {
             if (!server.isFull() && server.getWaitingPeriod() < fastest.getWaitingPeriod()) {
                 fastest = server;
-                index = i;
             }
         }
+
         fastest.addTask(task);
 
-        return index + 1;
+        return fastest.getWaitingPeriod();
     }
 }

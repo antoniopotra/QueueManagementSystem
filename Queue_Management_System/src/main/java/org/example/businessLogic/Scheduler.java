@@ -11,10 +11,10 @@ public class Scheduler {
     private final List<Server> servers;
     private Strategy strategy;
 
-    public Scheduler(int maxNoServers, int maxTasksPerServer, Simulation simulation) {
+    public Scheduler(int maxNoServers, int maxTasksPerServer) {
         servers = new ArrayList<>();
         for (int i = 0; i < maxNoServers; i++) {
-            Server server = new Server(maxTasksPerServer, i + 1 ,simulation);
+            Server server = new Server(maxTasksPerServer, i + 1);
             servers.add(server);
 
             Thread t = new Thread(server);

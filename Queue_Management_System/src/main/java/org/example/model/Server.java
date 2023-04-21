@@ -11,18 +11,16 @@ public class Server implements Runnable {
     private final AtomicInteger waitingPeriod;
     private final int id;
     private boolean open = true;
-    private final Simulation simulation;
 
-    public Server(int capacity, int id, Simulation simulation) {
+    public Server(int capacity, int id) {
         this.tasks = new ArrayBlockingQueue<>(capacity);
         this.waitingPeriod = new AtomicInteger(0);
         this.id = id;
-        this.simulation = simulation;
     }
 
     public void addTask(Task newTask) {
         tasks.add(newTask);
-        waitingPeriod.addAndGet(newTask.serviceTime());
+        waitingPeriod.getAndAdd(newTask.serviceTime());
     }
 
     @Override
@@ -36,10 +34,9 @@ public class Server implements Runnable {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            waitingPeriod.addAndGet(-first.serviceTime());
-            tasks.remove();
 
-            simulation.updateLog(String.format("T%d leaving Q%d\n", first.id(), id));
+            tasks.remove();
+            waitingPeriod.getAndAdd(-first.serviceTime());
         }
     }
 
