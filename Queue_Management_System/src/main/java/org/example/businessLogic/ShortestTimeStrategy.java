@@ -17,7 +17,6 @@ public class ShortestTimeStrategy implements Strategy {
         }
 
         fastest.addTask(task);
-
         return fastest.getWaitingPeriod();
     }
 }

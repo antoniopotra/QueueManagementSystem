@@ -15,8 +15,8 @@ public class ShortestQueueStrategy implements Strategy {
                 shortest = server;
             }
         }
-        shortest.addTask(task);
 
+        shortest.addTask(task);
         return shortest.getWaitingPeriod();
     }
 }

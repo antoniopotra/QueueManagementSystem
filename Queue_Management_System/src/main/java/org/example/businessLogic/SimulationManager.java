@@ -43,7 +43,7 @@ public class SimulationManager implements Runnable {
     }
 
     @Override
-    public void run() {
+    public synchronized void run() {
         FileWriter output = generateExecutionLog();
 
         float averageServiceTime = 0;
@@ -55,6 +55,7 @@ public class SimulationManager implements Runnable {
         int peakHour = -1, maxCount = -1;
         float averageWaitingTime = 0;
         int currentTime = 0;
+
         while (currentTime < timeLimit) {
             updateExecutionLog(output, currentTime);
             updateGui(currentTime);

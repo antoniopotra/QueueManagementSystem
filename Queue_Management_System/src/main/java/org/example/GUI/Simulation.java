@@ -1,7 +1,6 @@
 package org.example.GUI;
 
 import javax.swing.*;
-import java.io.Writer;
 
 public class Simulation extends JFrame {
     private JPanel panel;

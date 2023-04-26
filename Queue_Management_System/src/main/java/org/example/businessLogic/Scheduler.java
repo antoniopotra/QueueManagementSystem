@@ -1,6 +1,5 @@
 package org.example.businessLogic;
 
-import org.example.GUI.Simulation;
 import org.example.model.Server;
 import org.example.model.Task;
 

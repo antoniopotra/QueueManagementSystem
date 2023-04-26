@@ -1,7 +1,5 @@
 package org.example.model;
 
-import org.example.GUI.Simulation;
-
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -24,19 +22,29 @@ public class Server implements Runnable {
     }
 
     @Override
-    public void run() {
+    public synchronized void run() {
         while (open) {
             if (tasks.isEmpty()) continue;
 
             Task first = tasks.peek();
-            try {
-                Thread.sleep(first.serviceTime() * Constants.TIME_UNIT);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+            while (first.serviceTime() > 1) {
+                try {
+                    Thread.sleep(Constants.TIME_UNIT / 2);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                waitingPeriod.getAndAdd(-1);
+                first.decrementServiceTime();
+
+                try {
+                    Thread.sleep(Constants.TIME_UNIT / 2);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
 
             tasks.remove();
-            waitingPeriod.getAndAdd(-first.serviceTime());
         }
     }
 
