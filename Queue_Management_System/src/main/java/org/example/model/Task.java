@@ -31,4 +31,8 @@ public final class Task {
     public void decrementServiceTime() {
         serviceTime--;
     }
+
+    public void incrementServiceTime() {
+        serviceTime++;
+    }
 }

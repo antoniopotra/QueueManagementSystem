@@ -17,6 +17,9 @@ public class Server implements Runnable {
     }
 
     public void addTask(Task newTask) {
+        if (tasks.isEmpty()) {
+            newTask.incrementServiceTime();
+        }
         tasks.add(newTask);
         waitingPeriod.getAndAdd(newTask.serviceTime());
     }
@@ -27,24 +30,21 @@ public class Server implements Runnable {
             if (tasks.isEmpty()) continue;
 
             Task first = tasks.peek();
-            while (first.serviceTime() > 1) {
+            while (first.serviceTime() > 0) {
                 try {
-                    Thread.sleep(Constants.TIME_UNIT / 2);
+                    Thread.sleep(Constants.TIME_UNIT);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
 
                 waitingPeriod.getAndAdd(-1);
                 first.decrementServiceTime();
-
-                try {
-                    Thread.sleep(Constants.TIME_UNIT / 2);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
             }
 
             tasks.remove();
+            if (tasks.isEmpty()) {
+                waitingPeriod.set(0);
+            }
         }
     }
 
