@@ -1,0 +1,1 @@
+A Java desktop application which manages queues at a store. It allows the user to select a number of queues and clients, then it uses thread to simulate the best placement of the clients at the queues.
